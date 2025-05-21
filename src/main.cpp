@@ -142,6 +142,10 @@ int main(int argc, char *argv[]) {
 
   std::cout << std::endl<< std::endl;
 
+  GameManager gameManager(config);
+  gameManager.initTheGame();
+
+  /*
   Player player1(config, Types::Mod::USER, Types::Color::WHITE);
   Player player2(config, Types::Mod::USER, Types::Color::BLACK);
 
@@ -166,10 +170,12 @@ int main(int argc, char *argv[]) {
       if (com == Types::Command::MOVE) {
         Types::MovePos move = player.getMove();
         std::cout << "Move from (" << move.from.x << ", " << move.from.y << ") to (" << move.to.x << ", " << move.to.y << ")" << std::endl;
+
+        gameManager.makeMove(makeMove, move.from, move.to);
       }
     }
   }
-  
+  */
 
   return 0;
 }

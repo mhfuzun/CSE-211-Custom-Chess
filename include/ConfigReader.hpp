@@ -27,6 +27,7 @@ struct Movement {
   int sideways = 0;
   int diagonal = 0;
   bool l_shape = false;
+  bool backward = true;
   int diagonal_capture = 0;
   int first_move_forward = 0;
 };

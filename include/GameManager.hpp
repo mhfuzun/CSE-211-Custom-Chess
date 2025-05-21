@@ -12,6 +12,11 @@ class GameManager {
 
         ~GameManager ();
 
+        void initTheGame( void );
+
     private:
         const GameConfig &config;
+        ChessBoard chessBoard;
+        
+        bool makeMove(Types::Position from, Types::Position to);
 };

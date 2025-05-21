@@ -230,6 +230,7 @@ void ConfigReader::parsePieces(const nlohmann::json &json) {
 	  piece.movement.sideways = movement.value("sideways", 0);
 	  piece.movement.diagonal = movement.value("diagonal", 0);
 	  piece.movement.l_shape = movement.value("l_shape", false);
+	  piece.movement.backward = movement.value("backward", true);
 	  piece.movement.diagonal_capture = movement.value("diagonal_capture", 0);
 	  piece.movement.first_move_forward =
 		  movement.value("first_move_forward", 0);

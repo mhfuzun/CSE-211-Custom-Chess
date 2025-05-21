@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 class ChessBoard {
     public:
@@ -20,19 +21,6 @@ class ChessBoard {
             } board;
             
         };
-        
-        struct PositionHash {
-            std::size_t operator()(const Types::Position& p) const {
-                return std::hash<int>()(p.x) ^ (std::hash<int>()(p.y) << 1);
-            }
-        };
-
-        struct Piece {
-            std::string type;   // "King", "Pawn", etc.
-            Types::Color color;
-            bool display_on = true;
-            std::string ascii;
-        };
 
         ChessBoard();
 
@@ -42,10 +30,23 @@ class ChessBoard {
 
         void displayBoard(Types::Color perspectiveColor);
 
+        bool movePiece(Types::Position from, Types::Position to);
+
+        Types::Piece ChessBoard::getPiece(Types::Position from);
+
     private:
-        std::unordered_map<Types::Position, Piece, PositionHash> board;
+        Types::Piece NullPiece = {
+            "NULL",
+            Types::Color::EMPTY,
+            false,
+            ". ",
+            false
+        };
+        
+        // std::unordered_map<Types::Position, Types::Piece> board;
+        std::vector<std::vector<Types::Piece>> board;
         game_settings gameSettings;
 
-        std::string getPieceSymbol(const Piece& piece);
+        std::string getPieceSymbol(const Types::Piece& piece);
         
 };

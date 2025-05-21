@@ -156,6 +156,7 @@
       },
       "movement": {
         "forward": 1,
+        "backward": false,
         "diagonal_capture": 1,
         "first_move_forward": 2
       },
