@@ -132,14 +132,11 @@ void ConfigReader::parseGameSettings(const nlohmann::json &json) {
 	m_config.game_settings.turn_limit = settings.value("turn_limit", 100);
 	
 	if (settings.contains("board")) {
-		std::cout << "board verileri okunuyor."<<std::endl;
 		const auto &board = settings["board"];
 
 		m_config.game_settings.board.backgroundColor = board.value("textColor", "");
 		m_config.game_settings.board.backgroundColor = board.value("backgroundColor", "");
 		m_config.game_settings.board.backgroundColor = board.value("resetColor", "");
-		
-		std::cout << "okundu" << m_config.game_settings.board.backgroundColor <<std::endl;
 	} else {
 		m_config.game_settings.board.backgroundColor = "";
 		m_config.game_settings.board.backgroundColor = "";

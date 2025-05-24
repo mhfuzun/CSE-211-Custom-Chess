@@ -95,6 +95,7 @@ int main(int argc, char *argv[]) {
   // Get the parsed configuration
   const GameConfig &config = configReader.getConfig();
 
+/*
   // Display some information from the config
   std::cout << "==== Game Configuration ====" << std::endl;
   std::cout << "Game: " << config.game_settings.name << std::endl;
@@ -141,6 +142,7 @@ int main(int argc, char *argv[]) {
   }
 
   std::cout << std::endl<< std::endl;
+*/
 
   GameManager gameManager(config);
   gameManager.initTheGame();

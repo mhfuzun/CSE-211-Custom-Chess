@@ -32,19 +32,35 @@ class ChessBoard {
 
         bool movePiece(Types::Position from, Types::Position to);
 
-        Types::Piece ChessBoard::getPiece(Types::Position from);
+        Types::Piece getPieceAt(Types::Position from);
+        Types::Piece getPieceWithType(std::string type);
+
+        int getBoardSize( void );
+
+        bool checkCastlingForAColor( void );
+
+        void displayValidMovement(Types::Position from, std::vector<Types::Position> pos_list);
+        void resetHighlightColor( void );
 
     private:
+        struct BoardSquare
+        {
+            Types::Piece piece;
+            bool colored;
+        };
+        
         Types::Piece NullPiece = {
-            "NULL",
+            Types::NULL_PIECE_TYPE,
             Types::Color::EMPTY,
             false,
             ". ",
-            false
+            false,
+            {},
+            {}
         };
         
         // std::unordered_map<Types::Position, Types::Piece> board;
-        std::vector<std::vector<Types::Piece>> board;
+        std::vector<std::vector<BoardSquare>> board;
         game_settings gameSettings;
 
         std::string getPieceSymbol(const Types::Piece& piece);

@@ -23,23 +23,25 @@ void ChessBoard::initBoard(GameConfig config) {
     gameSettings.board.resetColor = config.game_settings.board.resetColor;
 
     for (int i=0; i<gameSettings.board_size; i++) {
-        board.push_back(std::vector<Types::Piece>());
+        board.push_back(std::vector<BoardSquare>());
         for (int j=0; j<gameSettings.board_size; j++)
-            board[i].push_back(NullPiece);
+            board[i].push_back({NullPiece, false});
     }
     
     for (const auto &piece : config.pieces) {
         Types::Piece piece_s;
-        Types::Position piece_p;
+        // Types::Position piece_p;
         piece_s.type = piece.type;
         piece_s.display_on = piece.display_on;
         piece_s.firstMove = true;
+        piece_s.movement = piece.movement;
+        piece_s.special_abilities = piece.special_abilities;
         
         if (piece.positions.count("white") > 0) {
             piece_s.color = Types::Color::WHITE;
             piece_s.ascii = piece.display_ascii[0];
             for (const auto &pos : piece.positions.at("white")) {
-                board[pos.x][pos.y] = piece_s;
+                board[pos.x][pos.y].piece = piece_s;
             }
         }
 
@@ -47,13 +49,14 @@ void ChessBoard::initBoard(GameConfig config) {
             piece_s.color = Types::Color::BLACK;
             piece_s.ascii = piece.display_ascii[1];
             for (const auto &pos : piece.positions.at("black")) {
-                board[pos.x][pos.y] = piece_s;
+                board[pos.x][pos.y].piece = piece_s;
             }
         }
     }
 }
 
 void ChessBoard::displayBoard(Types::Color perspectiveColor) {
+    const std::string yellow_bg = "\033[43m"; // sarı arka plan
     const std::string white_bg = "\033[47m"; // beyaz arka plan
     const std::string black_fg = "\033[30m"; // siyah yazı
     const std::string reset    = "\033[0m";  // sıfırla
@@ -77,11 +80,19 @@ void ChessBoard::displayBoard(Types::Color perspectiveColor) {
         std::cout << white_bg << black_fg;
         std::cout << " " << y + 1 << " "; // Satır numarası
         for (int x = 0; x < gameSettings.board_size; ++x) {
-            Types::Position pos{x, y};
-            if (board[x][y].display_on) {
-                std::cout << getPieceSymbol(board[x][y]) << " ";
+            // Types::Position pos{x, y};
+            if (board[x][y].colored) {
+                std::cout << yellow_bg << black_fg;
+            }
+
+            if (board[x][y].piece.display_on) {
+                std::cout << getPieceSymbol(board[x][y].piece) << " ";
             } else {
                 std::cout << ". "; // Boş kare
+            }
+
+            if (board[x][y].colored) {
+                std::cout << white_bg << black_fg;
             }
         }
         std::cout << " " << y + 1 << " "; // Satır numarası
@@ -103,15 +114,64 @@ std::string ChessBoard::getPieceSymbol(const Types::Piece& piece) {
 }
 
 bool ChessBoard::movePiece(Types::Position from, Types::Position to) {
-    board[from.x][from.y].firstMove = false;
+    board[from.x][from.y].piece.firstMove = false;
 
-    board[to.x][to.y] = board[from.x][from.y];
-    board[from.x][from.y] = NullPiece;
+    board[to.x][to.y].piece = board[from.x][from.y].piece;
+    board[from.x][from.y].piece = NullPiece;
     return true;
 }
 
-Types::Piece ChessBoard::getPiece(Types::Position from) {
-    return board[from.x][from.y];
+Types::Piece ChessBoard::getPieceAt(Types::Position from) {
+    return board[from.x][from.y].piece;
+}
+
+Types::Piece ChessBoard::getPieceWithType(std::string type) {
+    for (int x=0; x<getBoardSize(); x++)
+        for (int y=0; y<getBoardSize(); y++) {
+            Types::Piece piece = getPieceAt({x, y});
+            if (piece.type == type) 
+                return piece;
+        }
+            
+
+    return NullPiece;
+}
+
+int ChessBoard::getBoardSize( void ) {
+    return gameSettings.board_size;
+}
+
+bool ChessBoard::checkCastlingForAColor( void ) {
+    // Checkmat'ları kontrol et.
+    // Aranın boş olması gerekiyor.
+    // Taşların daha önce hiç haraket etmemiş olması gerekiyor.
+    return false;
+}
+
+void ChessBoard::displayValidMovement(Types::Position from, std::vector<Types::Position> pos_list) {
+    for (auto pos : pos_list) {
+        board[pos.x][pos.y].colored = true;
+    }
+    
+    std::cout << "Valid Movement: " << from.toString(getBoardSize()) << " --> ";
+    for (auto pos : pos_list) {
+        std::cout << pos.toString(getBoardSize()) << " ";
+    }
+    std::cout << std::endl;
+
+    displayBoard(getPieceAt(from).color);
+
+    for (auto pos : pos_list) {
+        board[pos.x][pos.y].colored = false;
+    }
+}
+
+void ChessBoard::resetHighlightColor( void ) {
+    for (auto row : board) {
+        for (auto sq : row) {
+            sq.colored = false;
+        }
+    }
 }
 
 /*
