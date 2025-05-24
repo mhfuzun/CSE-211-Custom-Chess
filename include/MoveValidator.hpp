@@ -17,6 +17,7 @@ class MoveValidator {
         MoveValidator(ChessBoard& _board);
         bool isValidMove(Types::Position from, Types::Position to);
         std::vector<Types::Position> getValidMoveList(Types::Position pos);
+        std::optional<Types::Position> checkMatForPos(Types::Position pos, Types::Color enemyColor);
 
     private:
         ChessBoard& board;

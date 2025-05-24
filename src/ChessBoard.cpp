@@ -3,10 +3,13 @@
 #include "ConfigReader.hpp"
 #include "Player.hpp"
 #include "MoveValidator.hpp"
+#include "assert_utils.hpp"
 
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <iomanip> // std::setw için gerekli
+#include <cassert>
 
 ChessBoard::ChessBoard() {
 }
@@ -62,11 +65,11 @@ void ChessBoard::displayBoard(Types::Color perspectiveColor) {
     const std::string reset    = "\033[0m";  // sıfırla
 
     std::cout << white_bg << black_fg;
-    std::cout << "   ";
+    std::cout << "    ";
     for (char c = 'a'; c < 'a' + gameSettings.board_size; ++c) {
         std::cout << c << " ";
     }
-    std::cout << "   " << reset << "\n";
+    std::cout << "    " << reset << "\n";
 
     for (int i = 0; i < gameSettings.board_size; i++) {
         int y;
@@ -78,7 +81,7 @@ void ChessBoard::displayBoard(Types::Color perspectiveColor) {
         }
 
         std::cout << white_bg << black_fg;
-        std::cout << " " << y + 1 << " "; // Satır numarası
+        std::cout << " " << std::setw(2) << y + 1 << " "; // Satır numarası
         for (int x = 0; x < gameSettings.board_size; ++x) {
             // Types::Position pos{x, y};
             if (board[x][y].colored) {
@@ -95,17 +98,17 @@ void ChessBoard::displayBoard(Types::Color perspectiveColor) {
                 std::cout << white_bg << black_fg;
             }
         }
-        std::cout << " " << y + 1 << " "; // Satır numarası
+        std::cout << " " << std::setw(2) << y + 1 << " "; // Satır numarası
         std::cout << reset << "\n";
     }
 
     // Alt satıra sütun harfleri
     std::cout << white_bg << black_fg;
-    std::cout << "   ";
+    std::cout << "    ";
     for (char c = 'a'; c < 'a' + gameSettings.board_size; ++c) {
         std::cout << c << " ";
     }
-    std::cout << "   " << reset << "\n";
+    std::cout << "    " << reset << "\n";
 }
 
 std::string ChessBoard::getPieceSymbol(const Types::Piece& piece) {
@@ -114,6 +117,9 @@ std::string ChessBoard::getPieceSymbol(const Types::Piece& piece) {
 }
 
 bool ChessBoard::movePiece(Types::Position from, Types::Position to) {
+    ASSERT_MSG(from.isValid(getBoardSize()), "invalid position!");
+    ASSERT_MSG(to.isValid(getBoardSize()), "invalid position!");
+
     board[from.x][from.y].piece.firstMove = false;
 
     board[to.x][to.y].piece = board[from.x][from.y].piece;
@@ -122,6 +128,7 @@ bool ChessBoard::movePiece(Types::Position from, Types::Position to) {
 }
 
 Types::Piece ChessBoard::getPieceAt(Types::Position from) {
+    ASSERT_MSG(from.isValid(getBoardSize()), "invalid position!");
     return board[from.x][from.y].piece;
 }
 

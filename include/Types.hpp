@@ -8,8 +8,6 @@ class Types {
         enum class Color { EMPTY, WHITE, BLACK };
         enum class Command { EMPTY, MOVE, UNDO, EXIT};
 
-        static constexpr  std::string NULL_PIECE_TYPE = "NULL";
-
         struct Position {
             int x;
             int y;
@@ -18,8 +16,12 @@ class Types {
                 return x == other.x && y == other.y;
             }
 
-            std::string toString(int chessBoard) const {
-                if (x < 0 || x >= chessBoard || y < 0 || y >= chessBoard) {
+            bool isValid(int chessBoardSize) const {
+                return (((0 <= x) && (x < chessBoardSize)) && ((0 <= y) && (y < chessBoardSize)));
+            }
+
+            std::string toString(int chessBoardSize) const {
+                if (!(isValid(chessBoardSize))) {
                     throw std::out_of_range("Position coordinates must be in the range [0,n].");
                 }
 
@@ -46,5 +48,17 @@ class Types {
             Movement movement;
             SpecialAbilities special_abilities;
         };
+
+        static constexpr  std::string NULL_PIECE_TYPE = "NULL";
+
+        static Color getEnemyColor(Types::Color ally) {
+            if (ally == Types::Color::WHITE) {
+                return Types::Color::BLACK;
+            } else if (ally == Types::Color::BLACK) {
+                return Types::Color::WHITE;
+            } else {
+                return Types::Color::EMPTY;
+            }
+        }
 };
 

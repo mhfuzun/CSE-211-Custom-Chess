@@ -3,6 +3,7 @@
 #include "ChessBoard.hpp"
 
 #include <vector>
+#include <algorithm> // remove_if
 
 MoveValidator::MoveValidator(ChessBoard& _board) : board(_board) {
 
@@ -11,7 +12,7 @@ MoveValidator::MoveValidator(ChessBoard& _board) : board(_board) {
 bool MoveValidator::isValidMove(Types::Position from, Types::Position to) {
     MoveValidator::MovAdjL adjL = createMovementGraph(from);
 
-    DumpMovementList(adjL.pos_list);
+    // DumpMovementList(adjL.pos_list);
 
     for (auto j : adjL.moveList) {
         if (adjL.pos_list[j] == to) {
@@ -172,6 +173,17 @@ std::vector<Types::Position> MoveValidator::createMovementList(Types::Position f
         if (!founded) posList.push_back(pos);
     }
 
+    // SpecialAbilities.royal
+    if (piece.special_abilities.royal) {
+        posList.erase(
+            std::remove_if(posList.begin(), posList.end(),
+            [&](const Types::Position& pos) {
+                return checkMatForPos(pos, Types::getEnemyColor(piece.color));
+            }),
+            posList.end()
+        );
+    }
+
     return posList;
 }
 
@@ -186,4 +198,23 @@ void MoveValidator::DumpMovementList (std::vector<Types::Position> list) {
         std::cout << move.toString(board.getBoardSize()) << " ";
     }
     std::cout << std::endl;
+}
+
+std::optional<Types::Position> MoveValidator::checkMatForPos(Types::Position pos, Types::Color enemyColor) {
+    for (int x=0; x<board.getBoardSize(); x++) {
+        for (int y=0; y<board.getBoardSize(); y++) {
+            Types::Position piecePos = {x, y};
+
+            Types::Piece piece = board.getPieceAt(piecePos);
+            if ((piece.type != Types::NULL_PIECE_TYPE) && (!piece.special_abilities.royal) && (piece.color == enemyColor)) {
+                std::vector<Types::Position> targetSq = createMovementList(piecePos);
+
+                for (const auto& cPos : targetSq) {
+                    if (cPos == pos) return piecePos;
+                }
+            }
+        }
+    }
+
+    return std::nullopt;
 }
