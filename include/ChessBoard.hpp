@@ -22,11 +22,11 @@ class ChessBoard {
             
         };
 
-        ChessBoard();
+        ChessBoard(const GameConfig &_config);
 
         ~ChessBoard();
 
-        void initBoard(GameConfig config);
+        void initBoard(const GameConfig& _config);
 
         void displayBoard(Types::Color perspectiveColor);
 
@@ -34,6 +34,7 @@ class ChessBoard {
 
         Types::Piece getPieceAt(Types::Position from);
         Types::Piece getPieceWithType(std::string type);
+        void placePieceAt(Types::Piece piece, Types::Position to);
 
         int getBoardSize( void );
 
@@ -41,6 +42,8 @@ class ChessBoard {
 
         void displayValidMovement(Types::Position from, std::vector<Types::Position> pos_list);
         void resetHighlightColor( void );
+
+        bool promoteThePiece(Types::Position from, std::string type);
 
     private:
         struct BoardSquare
@@ -62,6 +65,7 @@ class ChessBoard {
         // std::unordered_map<Types::Position, Types::Piece> board;
         std::vector<std::vector<BoardSquare>> board;
         game_settings gameSettings;
+        const GameConfig& config;
 
         std::string getPieceSymbol(const Types::Piece& piece);
         

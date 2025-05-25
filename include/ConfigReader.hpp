@@ -38,6 +38,7 @@ struct SpecialAbilities {
   bool royal = false;
   bool jump_over = false;
   bool promotion = false;
+  // std::vector<std::string> promotion;
   bool en_passant = false;
   // Additional custom abilities are also welcome
   std::unordered_map<std::string, bool> custom_abilities;
@@ -97,6 +98,17 @@ struct GameConfig {
 
   int getBoardSize( void ) const {
     return game_settings.board_size;
+  }
+
+  bool getPieceWithType(std::string type, PieceConfig& retPiece) const {
+    for (const auto& piece : pieces) {
+      if (piece.type == type) {
+        retPiece = piece;
+        return true;
+      }
+    }
+
+    return false;
   }
 };
 

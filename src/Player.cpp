@@ -15,11 +15,11 @@ Player::~Player () {
     
 }
 
-Types::Command Player::Turn( void ) {
-    return getCommand();
+Types::Command Player::Turn(Types::MovePos& retMovePos,  std::string& prom) {
+    return getCommand(retMovePos, prom);
 }
 
-Types::Command Player::getCommand( void ) {
+Types::Command Player::getCommand(Types::MovePos& retMovePos,  std::string& prom) {
     std::string line;
 
     while (true) {
@@ -34,13 +34,19 @@ Types::Command Player::getCommand( void ) {
 
         if (args[0] == "move") {
             bool succ = 
-                translatePositon_command2board(args[1], movePos.from) &
-                translatePositon_command2board(args[2], movePos.to);
+                translatePositon_command2board(args[1], retMovePos.from) &
+                translatePositon_command2board(args[2], retMovePos.to);
+
+            if (args.size() == 4) {
+                prom = args[3];
+            } else {
+                prom = "";
+            }
 
             if (succ)
                 return Types::Command::MOVE;
             else {
-                std::cout << "Again; EX: move a1 a2" << std::endl;
+                std::cout << "Again; EX: move a1 a2 [k]" << std::endl;
                 continue;
             }
         } else if (args[0] == "undo") {

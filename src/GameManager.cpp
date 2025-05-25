@@ -9,7 +9,7 @@
 #include <string>
 
 GameManager::GameManager(const GameConfig &_config)
-: config(_config) {
+: config(_config), chessBoard(_config) {
 
 }
 
@@ -43,16 +43,24 @@ void GameManager::initTheGame( void ) {
                     chessBoard.displayBoard(player.getColor());
                 }
                 
-                Types::Command com = player.Turn();
+                Types::MovePos move;
+                std::string prom;
+                Types::Command com = player.Turn(move, prom);
                 
                 if (com == Types::Command::MOVE) {
-                    Types::MovePos move = player.getMove();
+                    // Types::MovePos move = player.getMove();
                     std::cout << "Move from (" << move.from.x << ", " << move.from.y << ") to (" << move.to.x << ", " << move.to.y << ")" << std::endl;
 
                     if (!makeMove(move.from, move.to)) {
                         validMove = false;
                         drawBuf = false;
                     } else {
+                        std::cout << "Done" << std::endl;
+                        std::cout << "  prom:: to: " << move.to.toString(8) << ", v: " << chessBoard.getPieceAt(move.to).special_abilities.promotion << ", prom: " << prom << std::endl;
+                        if (chessBoard.getPieceAt(move.to).special_abilities.promotion && prom != "") {
+                            chessBoard.promoteThePiece(move.to, prom);
+                        }
+
                         validMove = true;
                     }
                 } else if (com == Types::Command::EXIT) {

@@ -163,7 +163,7 @@ void ConfigReader::parseSpecialAbilities(const nlohmann::json &abilities,
 	specialAbilities.jump_over = abilities.value("jump_over", false);
 	specialAbilities.promotion = abilities.value("promotion", false);
 	specialAbilities.en_passant = abilities.value("en_passant", false);
-
+	
 	// Parse any additional custom abilities
 	for (auto it = abilities.begin(); it != abilities.end(); ++it) {
 	  const std::string &key = it.key();

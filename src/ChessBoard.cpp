@@ -11,19 +11,19 @@
 #include <iomanip> // std::setw için gerekli
 #include <cassert>
 
-ChessBoard::ChessBoard() {
+ChessBoard::ChessBoard(const GameConfig& _config) : config(_config) {
 }
 
 ChessBoard::~ChessBoard() {
     
 }
 
-void ChessBoard::initBoard(GameConfig config) {
-    gameSettings.name = config.game_settings.name;
-    gameSettings.board_size = config.game_settings.board_size;
-    gameSettings.board.backgroundColor = config.game_settings.board.backgroundColor;
-    gameSettings.board.textColor = config.game_settings.board.textColor;
-    gameSettings.board.resetColor = config.game_settings.board.resetColor;
+void ChessBoard::initBoard(const GameConfig& _config) {
+    gameSettings.name = _config.game_settings.name;
+    gameSettings.board_size = _config.game_settings.board_size;
+    gameSettings.board.backgroundColor = _config.game_settings.board.backgroundColor;
+    gameSettings.board.textColor = _config.game_settings.board.textColor;
+    gameSettings.board.resetColor = _config.game_settings.board.resetColor;
 
     for (int i=0; i<gameSettings.board_size; i++) {
         board.push_back(std::vector<BoardSquare>());
@@ -31,7 +31,7 @@ void ChessBoard::initBoard(GameConfig config) {
             board[i].push_back({NullPiece, false});
     }
     
-    for (const auto &piece : config.pieces) {
+    for (const auto &piece : _config.pieces) {
         Types::Piece piece_s;
         // Types::Position piece_p;
         piece_s.type = piece.type;
@@ -120,16 +120,22 @@ bool ChessBoard::movePiece(Types::Position from, Types::Position to) {
     ASSERT_MSG(from.isValid(getBoardSize()), "invalid position!");
     ASSERT_MSG(to.isValid(getBoardSize()), "invalid position!");
 
-    board[from.x][from.y].piece.firstMove = false;
-
     board[to.x][to.y].piece = board[from.x][from.y].piece;
     board[from.x][from.y].piece = NullPiece;
+
+    board[to.x][to.y].piece.firstMove = false;
+
     return true;
 }
 
 Types::Piece ChessBoard::getPieceAt(Types::Position from) {
     ASSERT_MSG(from.isValid(getBoardSize()), "invalid position!");
     return board[from.x][from.y].piece;
+}
+
+void ChessBoard::placePieceAt(Types::Piece piece, Types::Position to) {
+    ASSERT_MSG(to.isValid(getBoardSize()), "invalid position!");
+    board[to.x][to.y].piece = piece;
 }
 
 Types::Piece ChessBoard::getPieceWithType(std::string type) {
@@ -178,6 +184,33 @@ void ChessBoard::resetHighlightColor( void ) {
         for (auto sq : row) {
             sq.colored = false;
         }
+    }
+}
+
+bool ChessBoard::promoteThePiece(Types::Position from, std::string type) {
+    PieceConfig retPiece;
+
+    if (config.getPieceWithType(type, retPiece)) {
+        Types::Piece piece_old = getPieceAt(from);
+
+        Types::Piece piece;
+        piece.type = retPiece.type;
+        piece.color = piece_old.color;
+        piece.display_on = true;
+        piece.firstMove = false;
+        piece.movement = retPiece.movement;
+        piece.special_abilities = retPiece.special_abilities;
+
+        if (piece_old.color == Types::Color::WHITE)
+            piece.ascii = retPiece.display_ascii[0];
+        else
+            piece.ascii = retPiece.display_ascii[1];
+
+        placePieceAt(piece, from);
+        return true;
+    } else {
+        std::cout << "Type Mistake!" << std::endl;
+        return false;
     }
 }
 

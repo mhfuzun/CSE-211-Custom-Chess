@@ -40,7 +40,7 @@ Types::Color MoveValidator::getSquareOwner(Types::Position sq) {
     return piece.color;
 }
 
-void MoveValidator::createMovement(std::vector<Types::Position> &ret, Types::Color color, Types::Position from, int length, int step_x, int step_y, bool onlyCapture) {
+void MoveValidator::createMovement(std::vector<Types::Position> &ret, Types::Color color, Types::Position from, int length, int step_x, int step_y, bool onlyCapture, bool noEat) {
     Types::Position newPos;
 
     newPos.x = from.x;
@@ -62,24 +62,16 @@ void MoveValidator::createMovement(std::vector<Types::Position> &ret, Types::Col
             ret.push_back(newPos);
         }
         else {
+            if (noEat) break;
+
             ret.push_back(newPos);
             break;
         }
     }
 }
 
-MoveValidator::MovAdjL MoveValidator::createMovementGraph(Types::Position from) {
-    MovAdjL adjL;
-    adjL.pos_list = createMovementList(from);
-
-    for (long unsigned int i=0; i<adjL.pos_list.size(); i++) {
-        adjL.moveList.push_back(i);
-    }
-
-    return adjL;
-}
-
 std::vector<Types::Position> MoveValidator::createMovementList(Types::Position from) {
+
     std::vector<Types::Position> ret;
     Types::Piece piece;
 
@@ -88,11 +80,11 @@ std::vector<Types::Position> MoveValidator::createMovementList(Types::Position f
     // forward
     if (piece.movement.forward > 0) {
         if (piece.movement.backward || (piece.color == Types::Color::WHITE)) {
-            createMovement(ret, piece.color, from, piece.movement.forward, 0, +1, false);
+            createMovement(ret, piece.color, from, piece.movement.forward, 0, +1, false, (piece.movement.diagonal_capture > 0));
         }
         
         if (piece.movement.backward || (piece.color == Types::Color::BLACK)) {
-            createMovement(ret, piece.color, from, piece.movement.forward, 0, -1, false);
+            createMovement(ret, piece.color, from, piece.movement.forward, 0, -1, false, (piece.movement.diagonal_capture > 0));
         }
     }
 
@@ -147,14 +139,14 @@ std::vector<Types::Position> MoveValidator::createMovementList(Types::Position f
     // first_move_forward
     if (piece.firstMove && piece.movement.first_move_forward) {
         if (piece.color == Types::Color::WHITE) {
-            createMovement(ret, piece.color, from, piece.movement.first_move_forward, 0, +1, false);
+            createMovement(ret, piece.color, from, piece.movement.first_move_forward, 0, +1, false, true);
         }
 
         if (piece.color == Types::Color::BLACK) {
-            createMovement(ret, piece.color, from, piece.movement.first_move_forward, 0, -1, false);
+            createMovement(ret, piece.color, from, piece.movement.first_move_forward, 0, -1, false, true);
         }
     }
-
+    
     // SpecialAbilities.castling
     // ChessBoard üzerinden "check" yapılmalı. fonksiyon tam eklenmedi.
 
@@ -185,6 +177,17 @@ std::vector<Types::Position> MoveValidator::createMovementList(Types::Position f
     }
 
     return posList;
+}
+
+MoveValidator::MovAdjL MoveValidator::createMovementGraph(Types::Position from) {
+    MovAdjL adjL;
+    adjL.pos_list = createMovementList(from);
+
+    for (long unsigned int i=0; i<adjL.pos_list.size(); i++) {
+        adjL.moveList.push_back(i);
+    }
+
+    return adjL;
 }
 
 std::vector<Types::Position> MoveValidator::getValidMoveList(Types::Position pos) {

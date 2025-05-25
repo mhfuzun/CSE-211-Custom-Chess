@@ -14,9 +14,9 @@ class Player {
 
         ~Player ();
 
-        Types::Command Turn( void );
+        Types::Command Turn(Types::MovePos& retMovePos,  std::string& prom);
         
-        Types::Command getCommand( void );
+        Types::Command getCommand(Types::MovePos& retMovePos,  std::string& prom);
 
         Types::MovePos getMove( void );
 

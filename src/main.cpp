@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
   // Get the parsed configuration
   const GameConfig &config = configReader.getConfig();
 
-/*
+  /*
   // Display some information from the config
   std::cout << "==== Game Configuration ====" << std::endl;
   std::cout << "Game: " << config.game_settings.name << std::endl;
@@ -146,38 +146,6 @@ int main(int argc, char *argv[]) {
 
   GameManager gameManager(config);
   gameManager.initTheGame();
-
-  /*
-  Player player1(config, Types::Mod::USER, Types::Color::WHITE);
-  Player player2(config, Types::Mod::USER, Types::Color::BLACK);
-
-  ChessBoard chessBoard;
-  chessBoard.initBoard(config);
-  chessBoard.displayBoard(Types::Color::WHITE);
-  chessBoard.displayBoard(Types::Color::BLACK);
-
-  for (int turn=0; turn<config.getTurnLimit(); turn++)
-  {
-    for (Player player : {player1, player2}) {
-      if (player.getColor() == Types::Color::WHITE) {
-        std::cout << "Turn: " << turn + 1 << " - White:" << std::endl;
-      } else if (player.getColor() == Types::Color::BLACK) {
-        std::cout << "Turn: " << turn + 1 << " - Black:" << std::endl;
-      }
-
-      chessBoard.displayBoard(player.getColor());
-
-      Types::Command com = player.Turn();
-      
-      if (com == Types::Command::MOVE) {
-        Types::MovePos move = player.getMove();
-        std::cout << "Move from (" << move.from.x << ", " << move.from.y << ") to (" << move.to.x << ", " << move.to.y << ")" << std::endl;
-
-        gameManager.makeMove(makeMove, move.from, move.to);
-      }
-    }
-  }
-  */
 
   return 0;
 }

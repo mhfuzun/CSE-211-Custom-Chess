@@ -24,7 +24,7 @@ class MoveValidator {
 
         bool isValidSquare(Types::Position sq);
         Types::Color getSquareOwner(Types::Position sq);
-        void createMovement(std::vector<Types::Position> &ret, Types::Color color, Types::Position from, int length, int step_x, int step_y, bool onlyCapture);
+        void createMovement(std::vector<Types::Position> &ret, Types::Color color, Types::Position from, int length, int step_x, int step_y, bool onlyCapture, bool noEat=false);
         MoveValidator::MovAdjL createMovementGraph(Types::Position from);
         std::vector<Types::Position> createMovementList(Types::Position from);
         void DumpMovementList (std::vector<Types::Position> list);
