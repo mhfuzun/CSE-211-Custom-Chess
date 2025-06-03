@@ -6,7 +6,8 @@ class Types {
     public:
         enum class Mod { USER, COMPUTER};
         enum class Color { EMPTY, WHITE, BLACK };
-        enum class Command { EMPTY, MOVE, UNDO, EXIT};
+        enum class Command { EMPTY, MOVE, UNDO, EXIT, REFRESH, PORTALINFO};
+        enum class SquareType { EMPTY, PIECE, PORTAL_IN, PORTAL_OUT};
 
         struct Position {
             int x;

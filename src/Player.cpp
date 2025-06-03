@@ -53,6 +53,8 @@ Types::Command Player::getCommand(Types::MovePos& retMovePos,  std::string& prom
             return Types::Command::UNDO;
         } else if (args[0] == "exit") {
             return Types::Command::EXIT;
+        } else if (args[0] == "refresh") {
+            return Types::Command::REFRESH;
         } else {
             std::cout << "Unknown Command!" << std::endl;
             continue;

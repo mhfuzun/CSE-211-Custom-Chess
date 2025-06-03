@@ -4,6 +4,7 @@
 #include "Player.hpp"
 #include "GameManager.hpp"
 #include "MoveValidator.hpp"
+#include "CoolDown.hpp"
 
 #include <iostream>
 #include <string>
@@ -26,7 +27,7 @@ void GameManager::initTheGame( void ) {
     // Players
     Player player1(config, Types::Mod::USER, Types::Color::WHITE);
     Player player2(config, Types::Mod::USER, Types::Color::BLACK);
-
+    
     for (int turn=0; turn<config.getTurnLimit(); turn++)
     {
         for (Player player : {player1, player2}) {
@@ -46,7 +47,8 @@ void GameManager::initTheGame( void ) {
                 Types::MovePos move;
                 std::string prom;
                 Types::Command com = player.Turn(move, prom);
-                
+
+                drawBuf = true;
                 if (com == Types::Command::MOVE) {
                     // Types::MovePos move = player.getMove();
                     std::cout << "Move from (" << move.from.x << ", " << move.from.y << ") to (" << move.to.x << ", " << move.to.y << ")" << std::endl;
@@ -66,6 +68,11 @@ void GameManager::initTheGame( void ) {
                 } else if (com == Types::Command::EXIT) {
                     std::cout << "Thank you!" << std::endl;
                     return;
+                } else if (com == Types::Command::REFRESH) {
+                    continue;
+                } else if (com == Types::Command::PORTALINFO) {
+                    chessBoard.dumpPortalInfo();
+                    continue;
                 }
             }
         }
@@ -79,6 +86,8 @@ bool GameManager::makeMove(Types::Position from, Types::Position to) {
         std::cout << "There is no any piece here!" << std::endl;
     // it is a valid move
     } else if (moveValidator->isValidMove(from, to)) {
+        std::cout << "Valid Move." << std::endl;
+        
         chessBoard.movePiece(from, to);
 
         return true;

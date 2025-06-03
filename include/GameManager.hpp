@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ConfigReader.hpp"
+#include "CoolDown.hpp"
 #include "ChessBoard.hpp"
 #include "MoveValidator.hpp"
 
@@ -19,6 +20,7 @@ class GameManager {
         const GameConfig &config;
         ChessBoard chessBoard;
         MoveValidator* moveValidator;
+        CoolDown coolDown;
         
         bool makeMove(Types::Position from, Types::Position to);
 };

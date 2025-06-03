@@ -2,6 +2,7 @@
 
 #include "Types.hpp"
 #include "ConfigReader.hpp"
+#include "Portal.hpp"
 
 #include <iostream>
 #include <string>
@@ -30,11 +31,16 @@ class ChessBoard {
 
         void displayBoard(Types::Color perspectiveColor);
 
-        bool movePiece(Types::Position from, Types::Position to);
+        Types::Piece movePiece(Types::Position from, Types::Position to);
+        Types::Piece testMoveTo(Types::Position from, Types::Position to);
+        Types::Piece putThePieceTo(Types::Piece piece, Types::Position to);
 
         Types::Piece getPieceAt(Types::Position from);
         Types::Piece getPieceWithType(std::string type);
         void placePieceAt(Types::Piece piece, Types::Position to);
+        std::vector<Types::Position> getPiecesWhichRoyal(Types::Color colorType);
+
+        bool isTherePortalEntry(Types::Position pos, Portal &portal);
 
         int getBoardSize( void );
 
@@ -45,10 +51,14 @@ class ChessBoard {
 
         bool promoteThePiece(Types::Position from, std::string type);
 
+        void dumpPortalInfo( void );
+
     private:
         struct BoardSquare
         {
+            Types::SquareType type;
             Types::Piece piece;
+            Portal portal;
             bool colored;
         };
         
@@ -61,6 +71,8 @@ class ChessBoard {
             {},
             {}
         };
+
+        const Portal NullPortal = Portal();
         
         // std::unordered_map<Types::Position, Types::Piece> board;
         std::vector<std::vector<BoardSquare>> board;
