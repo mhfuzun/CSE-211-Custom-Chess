@@ -61,6 +61,10 @@ class Types {
                 return Types::Color::EMPTY;
             }
         }
+
+        static std::string getColorText(Color color) {
+            return ((color == Color::WHITE) ? "White" : "Black" );
+        }
 };
 
 // --- Hash fonksiyonu ---

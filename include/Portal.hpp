@@ -19,6 +19,8 @@ class Portal {
         void initPortal(int pid, PortalDirection pdirection, PortalConfig portalConf);
 
         int getPortalID();
+        bool isPreserveDirection( void );
+        std::vector<Types::Color> getAllowedColors( void );
         PortalDirection getPortalDirection();
         bool isValidPortal( void );
         Types::Position getEntryPosition( void );

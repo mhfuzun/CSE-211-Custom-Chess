@@ -29,5 +29,5 @@ class GameManager {
         void showLastMove( void );
         void showCheckStatus(Types::Color color);
         bool GameUndo( void );
-        GameManager::TurnResult makeMove(Types::Position from, Types::Position to, std::string promotionType);
+        GameManager::TurnResult makeMove(Types::Color playerColor, Types::Position from, Types::Position to, std::string promotionType);
 };

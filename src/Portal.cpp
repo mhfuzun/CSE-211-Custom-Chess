@@ -46,6 +46,14 @@ bool Portal::isValidPortal( void ) {
     return (cooldownCounter == 0);
 }
 
+bool Portal::isPreserveDirection( void ) {
+    return preserveDirection;
+}
+
+std::vector<Types::Color> Portal::getAllowedColors( void ) {
+    return allowedColors;
+}
+
 Types::Position Portal::getEntryPosition( void ) {
     if (isValidPortal()) {
         return entryPosition;

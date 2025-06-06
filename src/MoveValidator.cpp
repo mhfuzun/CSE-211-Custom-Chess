@@ -496,12 +496,12 @@ bool MoveValidator::isValidCastling(Types::Color color, std::string type) {
 
     // 3. şah ve kale'ye kadar olan kareler tehdit altında olmamalı (kale önemli değil)
     if (type == "queen-side") {
-        for (int x=1; x<4; x++) {
+        for (int x=1; x<=4; x++) {
             if (checkAttack({x, yAdd}, Types::getEnemyColor(color)).size() > 0)
                 return false;
         }
     } else {
-        for (int x=5; x<7; x++) {
+        for (int x=4; x<7; x++) {
             if (checkAttack({x, yAdd}, Types::getEnemyColor(color)).size() > 0)
                 return false;
         }

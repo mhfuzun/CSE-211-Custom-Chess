@@ -124,7 +124,7 @@ void GameManager::initTheGame( void ) {
                 // Types::MovePos move = player.getMove();
                 std::cout << "Move from (" << move.from.x << ", " << move.from.y << ") to (" << move.to.x << ", " << move.to.y << ")" << std::endl;
 
-                GameManager::TurnResult turnRes = makeMove(move.from, move.to, prom);
+                GameManager::TurnResult turnRes = makeMove(player.getColor(), move.from, move.to, prom);
                 if (turnRes == GameManager::TurnResult::INVALID) {
                     validMove = false;
                     drawBuf = false;
@@ -132,7 +132,7 @@ void GameManager::initTheGame( void ) {
                     validMove = true;
                 } else {
                     if (turnRes == GameManager::TurnResult::CHECKMAT) {
-                        std::cout << "CHECKMAT, X wins!" << std::endl;
+                        std::cout << "CHECKMAT, " << Types::getColorText(player.getColor()) << " wins!" << std::endl;
                     } else if (turnRes == GameManager::TurnResult::DRAW) {
                         std::cout << "DRAW, In the end, friendship won!" << std::endl;
                     }
@@ -179,14 +179,17 @@ void GameManager::initTheGame( void ) {
     }
 }
 
-GameManager::TurnResult GameManager::makeMove(Types::Position from, Types::Position to, std::string promotionType) {
+GameManager::TurnResult GameManager::makeMove(Types::Color playerColor, Types::Position from, Types::Position to, std::string promotionType) {
     GameManager::TurnResult retType;
     retType = GameManager::TurnResult::INVALID;
 
     Types::Piece piece_from = chessBoard.getPieceAt(from);
 
+    if (playerColor != piece_from.color) {
+        std::cout << "Turn for " << Types::getColorText(playerColor) << ", select your own piece." << std::endl;
+        
     // there is no piece here!
-    if (piece_from.type == Types::NULL_PIECE_TYPE) {
+    } else if (piece_from.type == Types::NULL_PIECE_TYPE) {
         std::cout << "There is no any piece here!" << std::endl;
         
     // it is a valid move
@@ -195,6 +198,14 @@ GameManager::TurnResult GameManager::makeMove(Types::Position from, Types::Posit
         if (movRes.valid) {
             retType = GameManager::TurnResult::STANDART;
             bool promotePiece = moveValidator->isReadyForPoromotion(piece_from, to);
+
+            if (promotePiece && !chessBoard.isValidPromotionType(promotionType)) {
+                std::cout << "Invalid Promotion Type." << std::endl;
+                std::cout << "   use: move <from> <to> <promotion>" << std::endl;
+                std::cout << "   use: move a7 b8 Queen" << std::endl;
+                retType = GameManager::TurnResult::INVALID;
+                return retType;
+            }
             
             ////////////////////////////////////////////////////////////
             // History Store

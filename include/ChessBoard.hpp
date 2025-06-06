@@ -62,6 +62,8 @@ class ChessBoard {
         void setColorFlagList(const std::string &flagName, const std::vector<Types::Position> &positions, bool resetOthers=false);
         void setColorFlagSingle(const std::string &flagName, const Types::Position &pos, bool resetOthers=false);
 
+        bool isValidPromotionType(std::string pType);
+
     private:
         struct SquareColor {
             bool lastMove_begin = false;

@@ -365,6 +365,12 @@ void ChessBoard::dumpPortalInfo( void ) {
             Portal portal;
             if (isTherePortalEntry(pos, portal)) {
                 std::cout << "Portal[" << portal.getPortalID() << "]" << std::endl;
+                std::cout << "   Preserve Direction: " << ((portal.isPreserveDirection()) ? "True" : "False") << std::endl;
+                std::cout << "   Allowed Colors: [ ";
+                for (const auto &color : portal.getAllowedColors()) {
+                    std::cout << Types::getColorText(color);
+                }
+                std::cout << "]" << std::endl;
                 
                 if (portal.isValidPortal()) {
                     std::cout << "   Entry Pos.: " << portal.getEntryPosition().toString(getBoardSize()) << std::endl;
@@ -376,4 +382,13 @@ void ChessBoard::dumpPortalInfo( void ) {
                 }
             }
         }
+}
+
+bool ChessBoard::isValidPromotionType(std::string pType) {
+    return (
+                (pType == "Queen") ||
+                (pType == "Rook") ||
+                (pType == "Knight") ||
+                (pType == "Bishop")
+            );
 }
