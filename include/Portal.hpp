@@ -28,6 +28,8 @@ class Portal {
         void startCoolDown( void );
         bool iterateCoolDown( void );
 
+        bool validatePortalUse(Types::Piece piece);
+
     private:
         int id;
         int cooldown;
@@ -35,5 +37,6 @@ class Portal {
         std::vector<Types::Color> allowedColors;
         bool preserveDirection;
         PortalDirection direction;
+        Types::Position entryPosition;
         Types::Position exitPosition;
 };

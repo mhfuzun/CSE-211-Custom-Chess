@@ -3,7 +3,6 @@
 #include "ChessBoard.hpp"
 
 #include <vector>
-#include <array>
 #include <algorithm> // remove_if
 
 MoveValidator::MoveValidator(ChessBoard& _board) : board(_board) {
@@ -11,26 +10,15 @@ MoveValidator::MoveValidator(ChessBoard& _board) : board(_board) {
 }
 
 MoveValidator::MoveResult MoveValidator::isValidMove(Types::Position from, Types::Position to) {
-    ////////////////////////////////////////////////////////////
-    if (!isValidSquare(from) || !isValidSquare(to)) 
-        return {
-            false,
-            MoveValidator::MovementType::none,
-            false,
-            -1
-        };
-
-    ////////////////////////////////////////////////////////////
     MoveValidator::MovAdjL adjL = createMovementGraph(from);
 
     // DumpMovementList(adjL);
 
     for (auto j : adjL.moveList) {
-        if (adjL.pos_list[j].pos == to) {
+        if (adjL.pos_list[j] == to) {
             return {
                 true,
-                adjL.pos_list[j].type,
-                false,
+                MoveValidator::MoveType::DIRECT,
                 -1
             };
         }
@@ -38,12 +26,11 @@ MoveValidator::MoveResult MoveValidator::isValidMove(Types::Position from, Types
 
     for (auto portalIn : adjL.portalIn) {
         for (auto portalOut : adjL.portalOut[portalIn.portalOutID]) {
-            MoveValidator::MovementData moveData = adjL.pos_list[portalOut];
-            if (moveData.pos == to) {
+            Types::Position move = adjL.pos_list[portalOut];
+            if (move == to) {
                 return {
                     true,
-                    moveData.type,
-                    true,
+                    MoveValidator::MoveType::VIA_PORTAL,
                     portalIn.portalID
                 };
             }
@@ -52,19 +39,13 @@ MoveValidator::MoveResult MoveValidator::isValidMove(Types::Position from, Types
 
     return {
         false,
-        MoveValidator::MovementType::none,
-        false,
+        MoveValidator::MoveType::NONE,
         -1
     };
 }
 
-std::vector<Types::Position> MoveValidator::getValidMoveList(Types::Position pos) {
-    std::vector<Types::Position> ret;
-    for (const auto &movData : createMovementGraph(pos).pos_list) {
-        ret.push_back(movData.pos);
-    }
-
-    return ret;
+std::vector<Types::Position> getPositionArrayFromAdjL(MoveValidator::MovAdjL adjL) {
+    return adjL.pos_list;
 }
 
 bool MoveValidator::isValidSquare(Types::Position sq) {
@@ -88,7 +69,7 @@ Types::Color MoveValidator::getSquareOwner(Types::Position sq) {
 
 // True dönerse -> iterasyon tamamlandı
 // False dönerse -> devam et
-bool MoveValidator::SquareAttack(MoveValidator::MovementType movType, std::vector<MoveValidator::MovementData> &ret, Types::Piece piece, Types::Position pos, bool onlyCapture, bool noEat) {
+bool MoveValidator::SquareAttack(std::vector<Types::Position> &ret, Types::Piece piece, Types::Position pos, bool onlyCapture, bool noEat) {
     if (!isValidSquare(pos)) return true;
     
     Types::Color targetColor = getSquareOwner(pos);
@@ -101,20 +82,20 @@ bool MoveValidator::SquareAttack(MoveValidator::MovementType movType, std::vecto
 
         if (onlyCapture) return true;
 
-        ret.push_back({movType, pos});
+        ret.push_back(pos);
     } else {
         // std::cout << "Att: " << pos.toString(8) << " -> enemy, noEat: " << noEat << std::endl;
 
         if (noEat) return true;
 
-        ret.push_back({movType, pos});
+        ret.push_back(pos);
         return true;
     }
 
     return false;
 }
 
-void MoveValidator::createMovement(MoveValidator::MovementType movType, std::vector<MoveValidator::MovementData> &ret, Types::Piece piece, Types::Position from, int length, int step_x, int step_y, bool onlyCapture, bool noEat) {
+void MoveValidator::createMovement(std::vector<Types::Position> &ret, Types::Piece piece, Types::Position from, int length, int step_x, int step_y, bool onlyCapture, bool noEat) {
     Types::Position newPos;
 
     newPos.x = from.x;
@@ -126,49 +107,63 @@ void MoveValidator::createMovement(MoveValidator::MovementType movType, std::vec
         
         if (!isValidSquare(newPos)) break;
        
-        if (SquareAttack(movType, ret, piece, newPos, onlyCapture, noEat))
+        /*
+        Portal portal;
+        if (board.isTherePortalEntry(newPos, portal)) {
+            std::cout << "Portal: " << portal.getExitPosition().toString(8) << std::endl;
+            SquareAttack(ret, piece, portal.getExitPosition(), onlyCapture, noEat);
+            
+            for (const auto &pos : createMovementList(piece, portal.getExitPosition(), 1)) {
+                ret.push_back(pos);
+            }
+            
+            continue;
+        }
+        */
+
+        if (SquareAttack(ret, piece, newPos, onlyCapture, noEat))
             break;
     }
 }
 
-void MoveValidator::removeInvalidMovement(Types::Piece piece, Types::Position from, std::vector<MoveValidator::MovementData> &posList) {
+void MoveValidator::removeInvalidMovement(Types::Piece piece, Types::Position from, std::vector<Types::Position> &posList) {
     posList.erase(
         std::remove_if(posList.begin(), posList.end(),
-        [&](const MoveValidator::MovementData& movData) {
+        [&](const Types::Position& pos) {
             // size sıfır değilse hamlede şah durumu oluşuyor -> bunu alın buradan.
-            return (testMoveForAttack(from, movData.pos, piece.color).size() != 0);
+            return (testMoveForAttack(from, pos, piece.color).size() != 0);
         }),
         posList.end()
     );
 }
 
-std::vector<MoveValidator::MovementData> MoveValidator::createMovementList(Types::Piece piece, Types::Position from) {
+std::vector<Types::Position> MoveValidator::createMovementList(Types::Piece piece, Types::Position from) {
 
-    std::vector<MoveValidator::MovementData> ret;
+    std::vector<Types::Position> ret;
     
     // forward
     if (piece.movement.forward > 0) {
         if (piece.movement.backward || (piece.color == Types::Color::WHITE)) {
-            createMovement(MoveValidator::MovementType::forward, ret, piece, from, piece.movement.forward, 0, +1, false, (piece.movement.diagonal_capture > 0));
+            createMovement(ret, piece, from, piece.movement.forward, 0, +1, false, (piece.movement.diagonal_capture > 0));
         }
         
         if (piece.movement.backward || (piece.color == Types::Color::BLACK)) {
-            createMovement(MoveValidator::MovementType::forward, ret, piece, from, piece.movement.forward, 0, -1, false, (piece.movement.diagonal_capture > 0));
+            createMovement(ret, piece, from, piece.movement.forward, 0, -1, false, (piece.movement.diagonal_capture > 0));
         }
     }
 
     // sideways
     if (piece.movement.sideways > 0) {
-        createMovement(MoveValidator::MovementType::sideways, ret, piece, from, piece.movement.sideways, +1, 0, false);
-        createMovement(MoveValidator::MovementType::sideways, ret, piece, from, piece.movement.sideways, -1, 0, false);
+        createMovement(ret, piece, from, piece.movement.sideways, +1, 0, false);
+        createMovement(ret, piece, from, piece.movement.sideways, -1, 0, false);
     }
 
     // diagonal 
     if (piece.movement.diagonal > 0) {
-        createMovement(MoveValidator::MovementType::diagonal, ret, piece, from, piece.movement.diagonal, +1, +1, false);
-        createMovement(MoveValidator::MovementType::diagonal, ret, piece, from, piece.movement.diagonal, +1, -1, false);
-        createMovement(MoveValidator::MovementType::diagonal, ret, piece, from, piece.movement.diagonal, -1, +1, false);
-        createMovement(MoveValidator::MovementType::diagonal, ret, piece, from, piece.movement.diagonal, -1, -1, false);
+        createMovement(ret, piece, from, piece.movement.diagonal, +1, +1, false);
+        createMovement(ret, piece, from, piece.movement.diagonal, +1, -1, false);
+        createMovement(ret, piece, from, piece.movement.diagonal, -1, +1, false);
+        createMovement(ret, piece, from, piece.movement.diagonal, -1, -1, false);
     }
     
     // l_shape
@@ -186,48 +181,50 @@ std::vector<MoveValidator::MovementData> MoveValidator::createMovementList(Types
 
     if (piece.movement.l_shape) {
         for (auto Lpos : LposArray) {
-            SquareAttack(MoveValidator::MovementType::l_shape, ret, piece, Lpos, false, false);
+            SquareAttack(ret, piece, Lpos, false, false);
         }
     }
 
     // diagonal_capture
     if (piece.movement.diagonal_capture > 0) {
         if (piece.color == Types::Color::WHITE) {
-            createMovement(MoveValidator::MovementType::diagonal_capture, ret, piece, from, piece.movement.diagonal_capture, +1, +1, true);
-            createMovement(MoveValidator::MovementType::diagonal_capture, ret, piece, from, piece.movement.diagonal_capture, -1, +1, true);
+            createMovement(ret, piece, from, piece.movement.diagonal_capture, +1, +1, true);
+            createMovement(ret, piece, from, piece.movement.diagonal_capture, -1, +1, true);
         }
 
         if (piece.color == Types::Color::BLACK) {
-            createMovement(MoveValidator::MovementType::diagonal_capture, ret, piece, from, piece.movement.diagonal_capture, +1, -1, true);
-            createMovement(MoveValidator::MovementType::diagonal_capture, ret, piece, from, piece.movement.diagonal_capture, -1, -1, true);
+            createMovement(ret, piece, from, piece.movement.diagonal_capture, +1, -1, true);
+            createMovement(ret, piece, from, piece.movement.diagonal_capture, -1, -1, true);
         }
     }
 
     // first_move_forward
     if (piece.firstMove && piece.movement.first_move_forward) {
         if (piece.color == Types::Color::WHITE) {
-            createMovement(MoveValidator::MovementType::first_move_forward, ret, piece, from, piece.movement.first_move_forward, 0, +1, false, true);
+            createMovement(ret, piece, from, piece.movement.first_move_forward, 0, +1, false, true);
         }
 
         if (piece.color == Types::Color::BLACK) {
-            createMovement(MoveValidator::MovementType::first_move_forward, ret, piece, from, piece.movement.first_move_forward, 0, -1, false, true);
+            createMovement(ret, piece, from, piece.movement.first_move_forward, 0, -1, false, true);
         }
     }
     
     // Ignore repeated positions
-    std::vector<MoveValidator::MovementData> posList;
+    std::vector<Types::Position> posList;
     bool founded;
-    for (auto movData : ret) {
+    for (auto pos : ret) {
         founded = false;
         for (auto safe : posList) {
-            if (safe.pos == movData.pos) {
+            if (safe == pos) {
                 founded = true;
                 break;
             }
         }
 
-        if (!founded) posList.push_back(movData);
+        if (!founded) posList.push_back(pos);
     }
+
+    // removeInvalidMovement(piece, from, posList);
 
     return posList;
 }
@@ -235,25 +232,8 @@ std::vector<MoveValidator::MovementData> MoveValidator::createMovementList(Types
 /*
     Oluşturulan hamleler haraket ettirildiğinde şah durumunu kontrol eder.
 */
-std::vector<MoveValidator::MovementData> MoveValidator::createSafeMovementList(Types::Piece piece, Types::Position from) {
-    std::vector<MoveValidator::MovementData> moveList = createMovementList(piece, from);
-    
-    // special_abilities.castling
-    if ((piece.type == "King") && piece.special_abilities.castling) {
-        int yAdd;
-        if (piece.color == Types::Color::WHITE) {
-            yAdd = 0;
-        } else if (piece.color == Types::Color::BLACK) {
-            yAdd = 7;
-        }
-
-        if (isValidCastling(piece.color, "queen-side")) {
-            moveList.push_back({MoveValidator::MovementType::castling_long, {2, yAdd}});
-        } else if (isValidCastling(piece.color, "king-side")) {
-            moveList.push_back({MoveValidator::MovementType::castling_short, {6, yAdd}});
-        }
-    }
-
+std::vector<Types::Position> MoveValidator::createSafeMovementList(Types::Piece piece, Types::Position from) {
+    std::vector<Types::Position> moveList = createMovementList(piece, from);
     removeInvalidMovement(piece, from, moveList);
     return moveList;
 }
@@ -273,21 +253,21 @@ MoveValidator::MovAdjL MoveValidator::createMovementGraph(Types::Position from) 
     // Portal girişlerini bul
     int posCount = adjL.pos_list.size();
     for (int i=0, j=posCount, portalID=0; i<posCount; i++) {
-        const auto pData = adjL.pos_list[i];
+        const auto ppos = adjL.pos_list[i];
 
         Portal portal;
         //  is there a portal?                    and          (empty square or enemy)?
-        if (board.isTherePortalEntry(pData.pos, portal) && (getSquareOwner(pData.pos) != piece.color)) {
+        if (board.isTherePortalEntry(ppos, portal) && (getSquareOwner(ppos) != piece.color)) {
             if (portal.validatePortalUse(piece)) {
                 adjL.portalIn.push_back({portalID, portal.getPortalID()});
                 adjL.portalOut.push_back(std::vector<int>());
 
-                adjL.pos_list.push_back({MoveValidator::MovementType::portal_in, pData.pos});
+                adjL.pos_list.push_back(ppos);
                 adjL.portalOut[portalID].push_back(j);
                 j++;
 
-                for (const auto &moveData : createSafeMovementList(piece, portal.getExitPosition())) {
-                    adjL.pos_list.push_back(moveData);
+                for (const auto &pos : createSafeMovementList(piece, portal.getExitPosition())) {
+                    adjL.pos_list.push_back(pos);
                     adjL.portalOut[portalID].push_back(j);
                     j++;
                 }
@@ -300,10 +280,14 @@ MoveValidator::MovAdjL MoveValidator::createMovementGraph(Types::Position from) 
     return adjL;
 }
 
+std::vector<Types::Position> MoveValidator::getValidMoveList(Types::Position pos) {
+    return createMovementGraph(pos).pos_list;
+}
+
 void MoveValidator::DumpMovementList (MoveValidator::MovAdjL adjList) {
     std::cout << "Movement List: " << std::endl;
     for (auto moveID : adjList.moveList) {
-        Types::Position move = adjList.pos_list[moveID].pos;
+        Types::Position move = adjList.pos_list[moveID];
         std::cout << move.toString(board.getBoardSize()) << " ";
     }
     std::cout << std::endl;
@@ -313,7 +297,7 @@ void MoveValidator::DumpMovementList (MoveValidator::MovAdjL adjList) {
         std::cout << "Portal: " << portalIn.portalOutID << std::endl;
         std::cout << "Portal ID: " << portalIn.portalID << std::endl;
         for (auto portalOut : adjList.portalOut[portalIn.portalOutID]) {
-            Types::Position move = adjList.pos_list[portalOut].pos;
+            Types::Position move = adjList.pos_list[portalOut];
             std::cout << move.toString(board.getBoardSize()) << " ";
         }
         std::cout << std::endl;
@@ -330,10 +314,10 @@ std::vector<Types::Position> MoveValidator::checkAttack(Types::Position pos, Typ
 
             Types::Piece piece = board.getPieceAt(piecePos);
             if ((piece.type != Types::NULL_PIECE_TYPE) && (piece.color == enemyColor)) {
-                std::vector<MoveValidator::MovementData> targetSq = createMovementList(piece, piecePos);
+                std::vector<Types::Position> targetSq = createMovementList(piece, piecePos);
 
                 for (const auto& cPos : targetSq) {
-                    if (cPos.pos == pos) ret.push_back(piecePos);
+                    if (cPos == pos) ret.push_back(piecePos);
                 }
             }
         }
@@ -376,7 +360,7 @@ std::vector<Types::Position> MoveValidator::calculateAllMovementForAColor(Types:
 
             Types::Piece piece = board.getPieceAt(piecePos);
             if ((piece.type != Types::NULL_PIECE_TYPE) && (piece.color == color)) {
-                std::vector<Types::Position> movements = getValidMoveList(piecePos);
+                std::vector<Types::Position> movements = getPositionArrayFromAdjL(createMovementGraph(piecePos));
 
                 if (movements.size() > 0) {
                     allowedMovement.insert(allowedMovement.end(), movements.begin(), movements.end());
@@ -393,10 +377,10 @@ std::vector<Types::Position> MoveValidator::getAllPositionsInCheckmat(Types::Col
 
     for (const auto &pos : board.getPiecesWhichRoyal(color)) {
         Types::Piece piece = board.getPieceAt(pos);
-        std::vector<MoveValidator::MovementData> standartMovement = createMovementList(piece, pos);
+        std::vector<Types::Position> standartMovement = createMovementList(piece, pos);
 
-        for (const auto &cMovData : standartMovement) {
-            std::vector<Types::Position> checkPos = checkAttack(cMovData.pos, Types::getEnemyColor(piece.color));
+        for (const auto &cpos : standartMovement) {
+            std::vector<Types::Position> checkPos = checkAttack(cpos, Types::getEnemyColor(piece.color));
             
             if (checkPos.size() > 0) {
                 ret.insert(ret.end(), checkPos.begin(), checkPos.end());
@@ -460,15 +444,15 @@ bool MoveValidator::isValidCastling(Types::Color color, std::string type) {
     King = board.getPieceAt(King_P);
     Rook2 = board.getPieceAt(Rook2_P);
 
-    if ((King.type == Types::NULL_PIECE_TYPE) || !King.special_abilities.castling) return false;
+    if ((King.type == Types::NULL_PIECE_TYPE) && King.special_abilities.castling) return false;
     if (!King.firstMove) return false;
 
     // 1. şah ve kale haraket etmemiş olmalı
     if (type == "queen-side") {
-        if ((Rook1.type == Types::NULL_PIECE_TYPE) || !Rook1.special_abilities.castling) return false;
+        if ((Rook1.type == Types::NULL_PIECE_TYPE) && Rook1.special_abilities.castling) return false;
         if (!Rook1.firstMove) return false;
     } else if (type == "king-side") {
-        if ((Rook2.type == Types::NULL_PIECE_TYPE) || !Rook2.special_abilities.castling) return false;
+        if ((Rook2.type == Types::NULL_PIECE_TYPE) && Rook2.special_abilities.castling) return false;
         if (!Rook2.firstMove) return false;
     }
 
@@ -481,13 +465,13 @@ bool MoveValidator::isValidCastling(Types::Color color, std::string type) {
     }
     
     if (type == "queen-side") {
-        for (int x=1; x<4; x++) {
+        for (int x=5; x<7; x++) {
             Types::Piece piece = board.getPieceAt({x, yAdd});
             if (piece.type != Types::NULL_PIECE_TYPE)
                 return false;
         }
     } else {
-        for (int x=5; x<7; x++) {
+        for (int x=1; x<4; x++) {
             Types::Piece piece = board.getPieceAt({x, yAdd});
             if (piece.type != Types::NULL_PIECE_TYPE)
                 return false;
@@ -496,12 +480,12 @@ bool MoveValidator::isValidCastling(Types::Color color, std::string type) {
 
     // 3. şah ve kale'ye kadar olan kareler tehdit altında olmamalı (kale önemli değil)
     if (type == "queen-side") {
-        for (int x=1; x<4; x++) {
+        for (int x=4; x<7; x++) {
             if (checkAttack({x, yAdd}, Types::getEnemyColor(color)).size() > 0)
                 return false;
         }
     } else {
-        for (int x=5; x<7; x++) {
+        for (int x=1; x<5; x++) {
             if (checkAttack({x, yAdd}, Types::getEnemyColor(color)).size() > 0)
                 return false;
         }
@@ -509,14 +493,4 @@ bool MoveValidator::isValidCastling(Types::Color color, std::string type) {
 
     // her şey iyi
     return true;
-}
-
-std::array<Types::Position, 2> MoveValidator::getRookPositionWhenCastling(Types::Color color, MoveValidator::MovementType castlingType) {
-    int yAdd = (color == Types::Color::WHITE) ? 0 : 7;
-
-    if (castlingType == MoveValidator::MovementType::castling_long) {
-        return {{{0, yAdd}, {3, yAdd}}}; // for rook when queenside
-    } else {
-        return {{{7, yAdd}, {5, yAdd}}}; // for rook when kingside
-    }
 }

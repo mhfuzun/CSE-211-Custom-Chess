@@ -8,15 +8,15 @@
 #include <unistd.h>
 
 inline void printBacktrace(int max_frames = 25) {
-    void* addrlist[max_frames + 1];
+    std::vector<void*> addrlist(max_frames + 1);
 
-    int addrlen = backtrace(addrlist, sizeof(addrlist) / sizeof(void*));
+    int addrlen = backtrace(addrlist.data(), addrlist.size());
     if (addrlen == 0) {
         std::cerr << "  <empty stack trace>\n";
         return;
     }
 
-    char** symbol_list = backtrace_symbols(addrlist, addrlen);
+    char** symbol_list = backtrace_symbols(addrlist.data(), addrlen);
     for (int i = 1; i < addrlen; i++) {
         std::cerr << "  #" << i << ": " << symbol_list[i] << "\n";
     }

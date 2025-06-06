@@ -29,8 +29,8 @@ void ChessBoard::initBoard(const GameConfig& _config) {
 
     // Board Initialization
     for (int i=0; i<gameSettings.board_size; i++) {
+        board.push_back(std::vector<BoardSquare>());
         for (int j=0; j<gameSettings.board_size; j++) {
-            Types::Position Pos = {i, j};
             SquareColor sqColor;
             BoardSquare square = {
                 Types::SquareType::EMPTY,
@@ -40,7 +40,7 @@ void ChessBoard::initBoard(const GameConfig& _config) {
                 sqColor
             };
 
-            board[Pos] = square;
+            board[i].push_back(square);
         }
     }
     
@@ -58,9 +58,8 @@ void ChessBoard::initBoard(const GameConfig& _config) {
             piece_s.color = Types::Color::WHITE;
             piece_s.ascii = piece.display_ascii[0];
             for (const auto &pos : piece.positions.at("white")) {
-                Types::Position ppos = {pos.x, pos.y};
-                board[ppos].piece = piece_s;
-                board[ppos].type = Types::SquareType::PIECE;
+                board[pos.x][pos.y].piece = piece_s;
+                board[pos.x][pos.y].type = Types::SquareType::PIECE;
             }
         }
 
@@ -68,9 +67,8 @@ void ChessBoard::initBoard(const GameConfig& _config) {
             piece_s.color = Types::Color::BLACK;
             piece_s.ascii = piece.display_ascii[1];
             for (const auto &pos : piece.positions.at("black")) {
-                Types::Position ppos = {pos.x, pos.y};
-                board[ppos].piece = piece_s;
-                board[ppos].type = Types::SquareType::PIECE;
+                board[pos.x][pos.y].piece = piece_s;
+                board[pos.x][pos.y].type = Types::SquareType::PIECE;
             }
         }
     }
@@ -78,12 +76,10 @@ void ChessBoard::initBoard(const GameConfig& _config) {
     // Portals
     int portalID=0;
     for (const auto &portal : _config.portals) {
-        Types::Position portal_entry = {portal.positions.entry.x, portal.positions.entry.y};
-        Types::Position portal_exit = {portal.positions.exit.x, portal.positions.exit.y};
-        board[portal_entry].type = Types::SquareType::PORTAL_IN;
-        board[portal_entry].portal.initPortal(portalID, Portal::PortalDirection::IN, portal);
-        board[portal_exit].type = Types::SquareType::PORTAL_OUT;
-        board[portal_exit].portal.initPortal(portalID, Portal::PortalDirection::OUT, portal);
+        board[portal.positions.entry.x][portal.positions.entry.y].type = Types::SquareType::PORTAL_IN;
+        board[portal.positions.entry.x][portal.positions.entry.y].portal.initPortal(portalID, Portal::PortalDirection::IN, portal);
+        board[portal.positions.exit.x][portal.positions.exit.y].type = Types::SquareType::PORTAL_OUT;
+        board[portal.positions.exit.x][portal.positions.exit.y].portal.initPortal(portalID, Portal::PortalDirection::OUT, portal);
         portalID++;
     }
 }
@@ -113,23 +109,22 @@ void ChessBoard::displayBoard(Types::Color perspectiveColor) {
         std::cout << colorize(black_fg, white_bg);
         std::cout << " " << std::setw(2) << y + 1 << " "; // Satır numarası
         for (int x = 0; x < gameSettings.board_size; ++x) {
-            Types::Position sPos = {x, y};
-            std::cout << board[sPos].sqColor.getSquareColor(blackSquare);
+            std::cout << board[x][y].sqColor.getSquareColor(blackSquare);
             blackSquare = !blackSquare;
 
-            if ((board[sPos].type == Types::SquareType::PIECE) && board[sPos].piece.display_on) {
-                std::cout << getPieceSymbol(board[sPos].piece) << " ";
+            if ((board[x][y].type == Types::SquareType::PIECE) && board[x][y].piece.display_on) {
+                std::cout << getPieceSymbol(board[x][y].piece) << " ";
             } else if (
-                    board[sPos].portal.isValidPortal() &&
+                    board[x][y].portal.isValidPortal() &&
                     (
-                        (board[sPos].type == Types::SquareType::PORTAL_IN) || 
-                        (board[sPos].type == Types::SquareType::PORTAL_OUT)
+                        (board[x][y].type == Types::SquareType::PORTAL_IN) || 
+                        (board[x][y].type == Types::SquareType::PORTAL_OUT)
                     )
                 ) {
-                std::cout << board[sPos].portal.getPortalID();
-                if (board[sPos].portal.getPortalDirection() == Portal::PortalDirection::IN) {
+                std::cout << board[x][y].portal.getPortalID();
+                if (board[x][y].portal.getPortalDirection() == Portal::PortalDirection::IN) {
                     std::cout << "i";
-                } else if (board[sPos].portal.getPortalDirection() == Portal::PortalDirection::OUT) {
+                } else if (board[x][y].portal.getPortalDirection() == Portal::PortalDirection::OUT) {
                     std::cout << "o";
                 } else {
                     std::cout << "e";
@@ -163,14 +158,14 @@ Types::Piece ChessBoard::movePiece(Types::Position from, Types::Position to) {
     ASSERT_MSG(from.isValid(getBoardSize()), "invalid position!");
     ASSERT_MSG(to.isValid(getBoardSize()), "invalid position!");
 
-    Types::Piece targetSquare = board[to].piece;
+    Types::Piece targetSquare = board[to.x][to.y].piece;
 
-    board[to].piece = board[from].piece;
-    board[from].piece = NullPiece;
-    board[from].type = Types::SquareType::EMPTY;
+    board[to.x][to.y].piece = board[from.x][from.y].piece;
+    board[from.x][from.y].piece = NullPiece;
+    board[from.x][from.y].type = Types::SquareType::EMPTY;
 
-    board[to].piece.firstMove = false;
-    board[to].type = Types::SquareType::PIECE;
+    board[to.x][to.y].piece.firstMove = false;
+    board[to.x][to.y].type = Types::SquareType::PIECE;
 
     return targetSquare;
 }
@@ -180,10 +175,10 @@ Types::Piece ChessBoard::testMoveTo(Types::Position from, Types::Position to) {
     ASSERT_MSG(from.isValid(getBoardSize()), "invalid position!");
     ASSERT_MSG(to.isValid(getBoardSize()), "invalid position!");
 
-    Types::Piece targetSquare = board[to].piece;
+    Types::Piece targetSquare = board[to.x][to.y].piece;
 
-    board[to].piece = board[from].piece;
-    board[from].piece = NullPiece;
+    board[to.x][to.y].piece = board[from.x][from.y].piece;
+    board[from.x][from.y].piece = NullPiece;
 
     return targetSquare;
 }
@@ -191,8 +186,8 @@ Types::Piece ChessBoard::testMoveTo(Types::Position from, Types::Position to) {
 Types::Piece ChessBoard::putThePieceTo(Types::Piece piece, Types::Position to) {
     ASSERT_MSG(to.isValid(getBoardSize()), "invalid position!");
 
-    Types::Piece targetSquare = board[to].piece;
-    board[to].piece = piece;
+    Types::Piece targetSquare = board[to.x][to.y].piece;
+    board[to.x][to.y].piece = piece;
 
     return targetSquare;
 }
@@ -200,25 +195,25 @@ Types::Piece ChessBoard::putThePieceTo(Types::Piece piece, Types::Position to) {
 Types::Piece ChessBoard::getPieceAt(Types::Position from) {
     ASSERT_MSG(from.isValid(getBoardSize()), "invalid position!");
     
-    return board[from].piece;
+    return board[from.x][from.y].piece;
 }
 
 void ChessBoard::placePieceAt(Types::Piece piece, Types::Position to) {
     ASSERT_MSG(to.isValid(getBoardSize()), "invalid position!");
 
     if (piece.type == Types::NULL_PIECE_TYPE) {
-        board[to].type = Types::SquareType::EMPTY;
+        board[to.x][to.y].type = Types::SquareType::EMPTY;
     } else {
-        board[to].type = Types::SquareType::PIECE;
+        board[to.x][to.y].type = Types::SquareType::PIECE;
     }
-    board[to].piece = piece;
+    board[to.x][to.y].piece = piece;
 }
 
 void ChessBoard::placeNullPieceAt(Types::Position to) {
     ASSERT_MSG(to.isValid(getBoardSize()), "invalid position!");
     
-    board[to].type = Types::SquareType::EMPTY;
-    board[to].piece = ChessBoard::NullPiece;
+    board[to.x][to.y].type = Types::SquareType::EMPTY;
+    board[to.x][to.y].piece = ChessBoard::NullPiece;
 }
 
 std::vector<Types::Position> ChessBoard::getPiecesWhichRoyal(Types::Color colorType) {
@@ -274,8 +269,8 @@ bool ChessBoard::isTherePortalEntry(Types::Position pos, Portal &portal) {
 Portal* ChessBoard::getPortalEntry(Types::Position pos) {
     ASSERT_MSG(pos.isValid(getBoardSize()), "invalid position!");
 
-    if (board[pos].type == Types::SquareType::PORTAL_IN) {
-        return &board[pos].portal;
+    if (board[pos.x][pos.y].type == Types::SquareType::PORTAL_IN) {
+        return &board[pos.x][pos.y].portal;
     }
     
     return nullptr;
@@ -307,8 +302,10 @@ void ChessBoard::displayValidMovement(Types::Position from, std::vector<Types::P
 }
 
 void ChessBoard::resetColorFlagAll(const std::string &flagName) {
-    for (auto& [pos, sq] : board) {
-        sq.sqColor.setFlag(flagName, false);
+    for (auto &row : board) {
+        for (auto &sq : row) {
+            sq.sqColor.setFlag(flagName, false);
+        }
     }
 }
 
@@ -318,7 +315,7 @@ void ChessBoard::setColorFlagList(const std::string &flagName, const std::vector
 
     for (const auto &pos : positions) {
         ASSERT_MSG(pos.isValid(getBoardSize()), "invalid position!");
-        board[pos].sqColor.setFlag(flagName, true);
+        board[pos.x][pos.y].sqColor.setFlag(flagName, true);
     }
 }
 
@@ -327,7 +324,7 @@ void ChessBoard::setColorFlagSingle(const std::string &flagName, const Types::Po
         resetColorFlagAll(flagName);
 
     ASSERT_MSG(pos.isValid(getBoardSize()), "invalid position!");
-    board[pos].sqColor.setFlag(flagName, true);
+    board[pos.x][pos.y].sqColor.setFlag(flagName, true);
 }
 
 bool ChessBoard::promoteThePiece(Types::Position from, std::string type) {
@@ -377,3 +374,86 @@ void ChessBoard::dumpPortalInfo( void ) {
             }
         }
 }
+
+/*
+void ChessBoard::initBoard(GameConfig config) {
+    gameSettings.name = config.game_settings.name;
+    gameSettings.board_size = config.game_settings.board_size;
+    gameSettings.board.backgroundColor = config.game_settings.board.backgroundColor;
+    gameSettings.board.textColor = config.game_settings.board.textColor;
+    gameSettings.board.resetColor = config.game_settings.board.resetColor;
+
+    for (const auto &piece : config.pieces) {
+        Piece piece_s;
+        Types::Position piece_p;
+        piece_s.type = piece.type;
+        piece_s.display_on = piece.display_on;
+        
+        if (piece.positions.count("white") > 0) {
+            piece_s.color = Types::Color::WHITE;
+            piece_s.ascii = piece.display_ascii[0];
+            for (const auto &pos : piece.positions.at("white")) {
+                piece_p = {pos.x, pos.y};
+                board[piece_p] = piece_s;
+            }
+        }
+
+        if (piece.positions.count("black") > 0) {
+            piece_s.color = Types::Color::BLACK;
+            piece_s.ascii = piece.display_ascii[1];
+            for (const auto &pos : piece.positions.at("black")) {
+                piece_p = {pos.x, pos.y};
+                board[piece_p] = piece_s;
+            }
+        }
+    }
+}
+
+void ChessBoard::displayBoard(Types::Color perspectiveColor) {
+    const std::string white_bg = "\033[47m"; // beyaz arka plan
+    const std::string black_fg = "\033[30m"; // siyah yazı
+    const std::string reset    = "\033[0m";  // sıfırla
+
+
+    return;
+
+    std::cout << white_bg << black_fg;
+    std::cout << "   ";
+    for (char c = 'a'; c < 'a' + gameSettings.board_size; ++c) {
+        std::cout << c << " ";
+    }
+    std::cout << "   " << reset << "\n";
+
+    for (int i = 0; i < gameSettings.board_size; i++) {
+        int y;
+
+        if (perspectiveColor == Types::Color::WHITE) {
+            y = gameSettings.board_size - i - 1;
+        } else {
+            y = i;
+        }
+
+        std::cout << white_bg << black_fg;
+        std::cout << " " << y + 1 << " "; // Satır numarası
+        for (int x = 0; x < gameSettings.board_size; ++x) {
+            Types::Position pos{x, y};
+            auto it = board.find(pos);
+            if (it != board.end()) {
+                std::cout << getPieceSymbol(it->second) << " ";
+            } else {
+                std::cout << ". "; // Boş kare
+            }
+        }
+        std::cout << " " << y + 1 << " "; // Satır numarası
+        std::cout << reset << "\n";
+    }
+
+    // Alt satıra sütun harfleri
+    std::cout << white_bg << black_fg;
+    std::cout << "   ";
+    for (char c = 'a'; c < 'a' + gameSettings.board_size; ++c) {
+        std::cout << c << " ";
+    }
+    std::cout << "   " << reset << "\n";
+}
+*/

@@ -1,0 +1,108 @@
+{
+  "game_settings": {
+    "name": "Custom Chess",
+    "board_size": 8,
+    "turn_limit": 100,
+    "board": {
+      "textColor": "\u001b[30m", 
+      "backgroundColor": "\u001b[47m",
+      "resetColor": "\u001b[0m"
+    }
+  },
+  "pieces": [
+    {
+      "type": "King",
+      "ascii": {
+        "white": "♔",
+        "black": "♚"
+      },
+      "display_on": true,
+      "positions": {
+        "white": [{ "x": 4, "y": 0 }],
+        "black": [{ "x": 4, "y": 7 }]
+      },
+      "movement": {
+        "forward": 1,
+        "sideways": 1,
+        "diagonal": 1
+      },
+      "special_abilities": {
+        "castling": true,
+        "royal": true
+      },
+      "count": 1
+    },
+    {
+      "type": "Queen",
+      "ascii": {
+        "white": "♕",
+        "black": "♛"
+      },
+      "display_on": true,
+      "positions": {
+        "white": [{ "x": 3, "y": 0 }]
+      },
+      "movement": {
+        "forward": 8,
+        "sideways": 8,
+        "diagonal": 8
+      },
+      "special_abilities": {},
+      "count": 1
+    },
+    {
+      "type": "Rook",
+      "ascii": {
+        "white": "♖",
+        "black": "♜"
+      },
+      "display_on": true,
+      "positions": {
+        "white": [
+          { "x": 0, "y": 0 }
+        ],
+        "black": [
+          { "x": 0, "y": 7 },
+          { "x": 7, "y": 7 }
+        ]
+      },
+      "movement": {
+        "forward": 8,
+        "sideways": 8
+      },
+      "special_abilities": {
+        "castling": true
+      },
+      "count": 2
+    }
+  ],
+  "custom_pieces": [],
+  "portals": [
+    {
+      "type": "Portal",
+      "id": "portal1",
+      "positions": {
+        "entry": { "x": 2, "y": 3 },
+        "exit": { "x": 5, "y": 4 }
+      },
+      "properties": {
+        "preserve_direction": true,
+        "allowed_colors": ["white", "black"],
+        "cooldown": 1
+      }
+    },
+    {
+      "type": "Portal",
+      "id": "portal2",
+      "positions": {
+        "entry": { "x": 6, "y": 2 },
+        "exit": { "x": 1, "y": 5 }
+      },
+      "properties": {
+        "preserve_direction": false,
+        "allowed_colors": ["white"],
+        "cooldown": 2
+      }
+    }
+  ]
+}

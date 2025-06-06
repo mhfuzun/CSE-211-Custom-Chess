@@ -144,6 +144,14 @@ int main(int argc, char *argv[]) {
   std::cout << std::endl<< std::endl;
 */
 
+  std::cout << "Yeditepe University" << std::endl;
+  std::cout << "CSE-211 ~ Data Structures > Term Project" << std::endl;
+  std::cout << "" << std::endl;
+  std::cout << "Custome Chess" << std::endl;
+  std::cout << "By: Muhammet Furkan UZUN" << std::endl;
+  std::cout << "" << std::endl;
+  std::cout << "" << std::endl;
+
   GameManager gameManager(config);
   gameManager.initTheGame();
 

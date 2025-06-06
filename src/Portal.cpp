@@ -18,6 +18,8 @@ void Portal::initPortal(int pid, PortalDirection pdirection, PortalConfig portal
     cooldown = portalConf.properties.cooldown;
     cooldownCounter = 0;
     preserveDirection = portalConf.properties.preserve_direction;
+    entryPosition.x = portalConf.positions.entry.x;
+    entryPosition.y = portalConf.positions.entry.y;
     exitPosition.x = portalConf.positions.exit.x;
     exitPosition.y = portalConf.positions.exit.y;
 
@@ -46,7 +48,7 @@ bool Portal::isValidPortal( void ) {
 
 Types::Position Portal::getEntryPosition( void ) {
     if (isValidPortal()) {
-        return exitPosition;
+        return entryPosition;
     } else {
         return  {-1, -1};
     }
@@ -77,4 +79,16 @@ bool Portal::iterateCoolDown( void ) {
 
 int Portal::getCoolDown( void ) {
     return cooldownCounter;
+}
+
+bool Portal::validatePortalUse(Types::Piece piece) {
+    if (!isValidPortal()) return false;
+
+    for (const auto& allowedColor : allowedColors) {
+        if (piece.color == allowedColor) {
+            return true;
+        }
+    }
+    
+    return false;
 }

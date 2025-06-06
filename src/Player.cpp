@@ -33,9 +33,17 @@ Types::Command Player::getCommand(Types::MovePos& retMovePos,  std::string& prom
         std::vector<std::string> args = tokenize(line);
 
         if (args[0] == "move") {
-            bool succ = 
+            bool succ;
+
+            // move test command
+            if (args.size() == 2) {
+                succ = translatePositon_command2board(args[1], retMovePos.from);
+                retMovePos.to = {-1, -1};
+            } else if (args.size() == 3) {
+                succ = 
                 translatePositon_command2board(args[1], retMovePos.from) &
                 translatePositon_command2board(args[2], retMovePos.to);
+            }
 
             if (args.size() == 4) {
                 prom = args[3];
@@ -55,6 +63,10 @@ Types::Command Player::getCommand(Types::MovePos& retMovePos,  std::string& prom
             return Types::Command::EXIT;
         } else if (args[0] == "refresh") {
             return Types::Command::REFRESH;
+        } else if (args[0] == "portal") {
+            return Types::Command::PORTALINFO;
+        } else if (args[0] == "history") {
+            return Types::Command::HISTORY;
         } else {
             std::cout << "Unknown Command!" << std::endl;
             continue;

@@ -55,8 +55,8 @@ distclean: clean
 	@printf "$(GREEN)Dependencies removed!$(RESET)\n"
 
 run: $(EXECUTABLE)
-	@printf "$(GREEN)Running the project with chess_pieces.json...$(RESET)\n"
-	@./$(EXECUTABLE) data/chess_pieces_test.json
+	@printf "$(GREEN)Running the project with chess_pieces_checkmat.json...$(RESET)\n"
+	@./$(EXECUTABLE) data/chess_pieces_checkmat.json
 
 custom_pieces: $(EXECUTABLE)
 	@printf "$(GREEN)Running the project with custom_pieces.json...$(RESET)\n"

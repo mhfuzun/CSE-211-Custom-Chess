@@ -6,7 +6,7 @@ class Types {
     public:
         enum class Mod { USER, COMPUTER};
         enum class Color { EMPTY, WHITE, BLACK };
-        enum class Command { EMPTY, MOVE, UNDO, EXIT, REFRESH, PORTALINFO};
+        enum class Command { EMPTY, MOVE, UNDO, EXIT, REFRESH, PORTALINFO, HISTORY};
         enum class SquareType { EMPTY, PIECE, PORTAL_IN, PORTAL_OUT};
 
         struct Position {
@@ -21,9 +21,9 @@ class Types {
                 return (((0 <= x) && (x < chessBoardSize)) && ((0 <= y) && (y < chessBoardSize)));
             }
 
-            std::string toString(int chessBoardSize) const {
+            std::string toString(int chessBoardSize=8) const {
                 if (!(isValid(chessBoardSize))) {
-                    throw std::out_of_range("Position coordinates must be in the range [0,n].");
+                    throw std::out_of_range("Position coordinates must be in the range [0,n]: {x: " + std::to_string(x) + ", y: " + std::to_string(y) + "}.");
                 }
 
                 char file = static_cast<char>('a' + x);   // x: 0 -> 'a', ..., 7 -> 'h', ...
@@ -32,7 +32,7 @@ class Types {
                 return std::string{file, rank};
             }
         };
-
+        
         struct MovePos
         {
             Position from;
@@ -63,3 +63,12 @@ class Types {
         }
 };
 
+// --- Hash fonksiyonu ---
+namespace std {
+    template<>
+    struct hash<Types::Position> {
+        std::size_t operator()(const Types::Position& p) const noexcept {
+            return std::hash<int>()(p.x) ^ (std::hash<int>()(p.y) << 1);
+        }
+    };
+}
